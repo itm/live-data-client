@@ -1,0 +1,15 @@
+*.ipr
+*.iml
+*.iws
+target/
+.DS_Store
+.idea
+nb-configuration.xml
+.classpath
+.settings
+.project
+*.class
+.svn
+*.svn
+nbactions.xml
+.checkstyle
