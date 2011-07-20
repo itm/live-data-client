@@ -15,13 +15,13 @@
  */
 package eu.smartsantander.livedataclient
 
-import org.slf4j.{LoggerFactory, Logger}
 import wsn.{Listener, ControllerClient}
 import collection.mutable.HashMap
 import scala.xml._
 import redis.clients.jedis.Jedis
 import org.clapper.argot._
 import ArgotConverters._
+import java.io.FileNotFoundException
 
 /**
  *
@@ -29,21 +29,31 @@ import ArgotConverters._
  */
 
 object LiveDataCli {
+
   val DefaultConfigLocation = "config.xml"
+
   val ApplicationInfo = "Live Data Client: Version 1.0. Copyright (c) 2011, Institut fuer Telematik."
+
   val ApplicationName = "ldc-cli"
 
+  val redisHost = "localhost"
+
+  val jedis = new Jedis(redisHost) // TODO Catch error when Redis is not available
+
   def main(args: Array[String]) {
+
     // Handle command line arguments
     val parser = new ArgotParser(ApplicationName, preUsage = Some(ApplicationInfo))
-    var configFile : SingleValueOption[String] = null
+
+    val configFile: SingleValueOption[String] =
+      parser.option[String](List("f", "config-file"), "<config-file>", "Path to configuration file")
+
     try {
-      configFile = parser.option[String](List("f", "config-file"), "<config-file>", "Path to configuration file")
       parser.parse(args)
     }
     catch {
       case e: ArgotUsageException => println(e.getMessage); sys.exit(1)
-      case e: Exception => log.error(e.getMessage, e); sys.exit(1)
+      case e: Exception => println(e.getMessage); sys.exit(1)
     }
 
     // Load the configuration
@@ -54,26 +64,26 @@ object LiveDataCli {
 
     // Init testbed controller and listener
     val listener: Listener = new Listener(jedis)
+
     val controller: ControllerClient = new ControllerClient(listener, configuration)
+
     controller.setupProtobufClient()
 
-    log.info("Server started...")
+    println("Server started...")
   }
 
   def loadConfiguration(configLocation: String): HashMap[String, String] = {
     val configuration = new HashMap[String, String]
-    val configXml = XML.loadFile(configLocation)
-
-    (configXml \\ "config" \ "_").foreach(c => configuration += c.label -> c.text)
+    try {
+      val configXml = XML.loadFile(configLocation)
+      (configXml \\ "config" \ "_").foreach(c => configuration += c.label -> c.text)
+    }
+    catch {
+      case e: FileNotFoundException => println("Configuration file not found: " + configLocation); sys.exit(1)
+    }
 
     configuration
   }
-
-  val redisHost = "localhost"
-
-  val jedis = new Jedis(redisHost)  // TODO Catch error when Redis is not available
-
-  val log: Logger = LoggerFactory.getLogger(classOf[LiveDataCli])
 }
 
 class LiveDataCli

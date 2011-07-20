@@ -21,8 +21,6 @@ import de.uniluebeck.itm.tr.util.StringUtils
 import de.uniluebeck.itm.wisebed.cmdlineclient.protobuf.ProtobufControllerClientListener
 import eu.wisebed.api.common.Message
 import eu.wisebed.api.controller.RequestStatus
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import javax.jws.WebParam
 import redis.clients.jedis.Jedis
 import java.util.{LinkedList, List, Queue}
@@ -32,16 +30,24 @@ import java.util.{LinkedList, List, Queue}
  */
 class Listener(jedis: Jedis) extends ProtobufControllerClientListener {
 
+  val messageQueue: Queue[Message] = new LinkedList[Message]
+
+  val requestStatusQueue: Queue[RequestStatus] = new LinkedList[RequestStatus]
+
+  val notificationQueue: Queue[String] = new LinkedList[String]
+
+  val channelName = "sensor_readings"
+
   def onConnectionClosed() {
-    log.debug("Connection closed")
+    println("Connection closed")
   }
 
   def onConnectionEstablished() {
-    log.debug("Connection established")
+    println("Connection established")
   }
 
   def experimentEnded() {
-    log.debug("Experiment ended")
+    println("Experiment ended")
   }
 
   class Reading(sender: String, reading: String, readingType: String, timestamp: Long) {
@@ -87,29 +93,30 @@ class Listener(jedis: Jedis) extends ProtobufControllerClientListener {
 
           // Publish data channel using Redis
           if (reading.getReadingType != "none") {
-            log.info(reading.toJson)
-            jedis.publish("sensor_readings", reading.toJson)
+            println(reading.toJson)
+            jedis.publish(channelName, reading.toJson)
           }
 
         }
         catch {
           case e: NumberFormatException => {
-            log.error(e.getMessage, e)
+            println(e.getMessage)
           }
           case e: Exception => {
-            log.error(e.getMessage)
+            println(e.getMessage)
+            sys.exit(1)
           }
         }
       }
       else {
-        log.info("Unknown message:" + StringUtils.replaceNonPrintableAsciiCharacters(new String(msg.getBinaryData)))
+        println("Unknown message:" + StringUtils.replaceNonPrintableAsciiCharacters(new String(msg.getBinaryData)))
       }
     }
   }
 
   def receiveNotification(@WebParam(name = "msg", targetNamespace = "") notifications: List[String]) {
     for (notification <- notifications) {
-      log.info("[Notification]:" + notification)
+      println("[Notification]:" + notification)
       notificationQueue.add(notification)
     }
   }
@@ -129,12 +136,4 @@ class Listener(jedis: Jedis) extends ProtobufControllerClientListener {
   def getNotificationQueue: Queue[String] = {
     notificationQueue
   }
-
-  val messageQueue: Queue[Message] = new LinkedList[Message]
-
-  val requestStatusQueue: Queue[RequestStatus] = new LinkedList[RequestStatus]
-
-  val notificationQueue: Queue[String] = new LinkedList[String]
-
-  val log: Logger = LoggerFactory.getLogger(classOf[Listener])
 }

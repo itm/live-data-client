@@ -17,8 +17,6 @@ package eu.smartsantander.livedataclient.wsn
 
 import de.uniluebeck.itm.wisebed.cmdlineclient.protobuf.ProtobufControllerClient
 import de.uniluebeck.itm.wisebed.cmdlineclient.wrapper.WSNAsyncWrapper
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.net.InetAddress
 import eu.wisebed.api.sm.UnknownReservationIdException_Exception
 import eu.wisebed.api.sm.ExperimentNotRunningException_Exception
@@ -35,10 +33,16 @@ import java.util.List
  */
 class ControllerClient(listener: Listener, configuration: HashMap[String, String]) {
 
-  secretReservationKeys = BeanShellHelper.parseSecretReservationKeys(configuration("secretReservationKeys"))
-  pccHost = configuration("pccHost")
-  pccPort = (configuration("pccPort")).toInt
-  sessionManagementEndpoint = configuration("smEndpointurl")
+  val sessionManagementEndpoint: String = configuration("smEndpointurl")
+
+  val pccHost: String = configuration("pccHost")
+
+  val pccPort: Int = (configuration("pccPort")).toInt
+
+  var wsn: WSNAsyncWrapper = null
+
+  private var secretReservationKeys: List[SecretReservationKey] =
+    BeanShellHelper.parseSecretReservationKeys(configuration("secretReservationKeys"))
 
   def setupProtobufClient() {
     val sessionManagement: SessionManagement = WSNServiceHelper.getSessionManagementService(sessionManagementEndpoint)
@@ -48,14 +52,15 @@ class ControllerClient(listener: Listener, configuration: HashMap[String, String
     }
     catch {
       case e: UnknownReservationIdException_Exception => {
-        log.warn("There was not reservation found with the given secret reservation key. Exiting.")
-        System.exit(1)
+        println("There was not reservation found with the given secret reservation key. Exiting.")
+        sys.exit(1)
       }
       case e: ExperimentNotRunningException_Exception => {
-        log.error(e.getMessage, e)
+        println(e.getMessage)
+        sys.exit(1)
       }
     }
-    log.info("Got a WSN instance URL, endpoint is: {}", wsnEndpointURL)
+    println("Got a WSN instance URL, endpoint is: %s".format(wsnEndpointURL))
     val wsnService: WSN = WSNServiceHelper.getWSNService(wsnEndpointURL)
     wsn = WSNAsyncWrapper.of(wsnService)
     val pcc = ProtobufControllerClient.create(pccHost, 8885, secretReservationKeys)
@@ -67,19 +72,19 @@ class ControllerClient(listener: Listener, configuration: HashMap[String, String
   def setupWebServiceClient() {
     val localControllerEndpointURL: String = "http://" + InetAddress.getLocalHost.getCanonicalHostName + ":8091/controller"
     val sessionManagement: SessionManagement = WSNServiceHelper.getSessionManagementService(sessionManagementEndpoint)
-    log.info("Using the following parameters for calling getInstance(): {}, {}", secretReservationKeys, localControllerEndpointURL)
+    println("Using the following parameters for calling getInstance(): {}, {}", secretReservationKeys, localControllerEndpointURL)
     val delegator: DelegatingController = new DelegatingController(listener)
     delegator.publish(localControllerEndpointURL)
-    log.info("Local controller published on url: {}", localControllerEndpointURL)
+    println("Local controller published on url: {}", localControllerEndpointURL)
     try {
       val wsnEndpointURL: String = sessionManagement.getInstance(secretReservationKeys, localControllerEndpointURL)
-      log.info("Got a WSN instance URL, endpoint is: {}", wsnEndpointURL)
+      println("Got a WSN instance URL, endpoint is: {}", wsnEndpointURL)
       val wsnService: WSN = WSNServiceHelper.getWSNService(wsnEndpointURL)
       wsn = WSNAsyncWrapper.of(wsnService)
     }
     catch {
       case e: ExceptionInInitializerError => {
-        log.error("Failed to initialize wsnEnpoint, maybe secretReservationKeys are invalid!", e)
+        println("Failed to initialize wsnEnpoint, maybe secretReservationKeys are invalid!")
       }
     }
   }
@@ -95,16 +100,4 @@ class ControllerClient(listener: Listener, configuration: HashMap[String, String
   def getWsn: WSNAsyncWrapper = {
     wsn
   }
-
-  private var sessionManagementEndpoint: String = _
-
-  private var pccHost: String = _
-
-  private var pccPort: Int = _
-
-  private var wsn: WSNAsyncWrapper = null
-
-  private var secretReservationKeys: List[SecretReservationKey] = _
-
-  val log: Logger = LoggerFactory.getLogger(classOf[ControllerClient])
 }
