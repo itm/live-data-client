@@ -19,5 +19,5 @@
     <pccHost>wisebed.itm.uni-luebeck.de</pccHost>
     <pccPort>8885</pccPort>
     <smEndpointurl>http://wisebed.itm.uni-luebeck.de:8888/sessions</smEndpointurl>
-    <secretReservationKeys>urn:wisebed:uzl1:,9E3361FC86038743301EBF10FCE44C41</secretReservationKeys>
+    <secretReservationKeys>urn:wisebed:uzl1:,77353604DF11334295538F9C62A4E6CB</secretReservationKeys>
 </config>
