@@ -9,7 +9,7 @@ readings, the LDC fetches these readings utilizing the
 [Testbed Runtime's][testbed-runtime] client utilies, publishes them on a channel 
 using [Redis][redis]'s publish/subscribe mechanism. 
 
-To push the data to the browser a [NodeJS][nodjs] server in conjunction with
+To push the data to the browser a [NodeJS][nodejs] server in conjunction with
 the [Socket IO][socketio] library is used. The NodeJS server uses a Redis
 client to subscribe to the sensor readings channel and pushes the incoming
 data to the browser with Socket IO websockets.
