@@ -1,0 +1,6 @@
+#!/bin/bash
+
+LOG_FILE="ldc-cli.log"
+
+exec java -jar ldc-cli.jar "$@" > ${LOG_FILE} 2>&1 &
+
