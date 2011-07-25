@@ -24,10 +24,10 @@ import ArgotConverters._
 import java.io.FileNotFoundException
 
 /**
+ * Live data client command line interface.
  *
  * @author Soenke Nommensen 
  */
-
 object LiveDataCli {
 
   val DefaultConfigLocation = "config.xml"
@@ -52,8 +52,14 @@ object LiveDataCli {
       parser.parse(args)
     }
     catch {
-      case e: ArgotUsageException => println(e.getMessage); sys.exit(1)
-      case e: Exception => println(e.getMessage); sys.exit(1)
+      case e: ArgotUsageException => {
+        println(e.getMessage)
+        sys.exit(1)
+      }
+      case e: Exception => {
+        println(e.getMessage)
+        sys.exit(1)
+      }
     }
 
     // Load the configuration
@@ -79,7 +85,7 @@ object LiveDataCli {
       (configXml \\ "config" \ "_").foreach(c => configuration += c.label -> c.text)
     }
     catch {
-      case e: FileNotFoundException => println("Configuration file not found: " + configLocation); sys.exit(1)
+      case e: FileNotFoundException => sys.error("Configuration file not found: " + configLocation)
     }
 
     configuration

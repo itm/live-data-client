@@ -51,7 +51,7 @@ class Listener(jedis: Jedis) extends ProtobufControllerClientListener {
   }
 
   class Reading(sender: String, reading: String, readingType: String, timestamp: Long) {
-    val jsonFormat = "{ \"sender\": \"%s\", \"reading\": \"%s\", \"readingType\": \"%s\", \"timestamp\": %s }"
+    private val jsonFormat = "{ \"sender\": \"%s\", \"reading\": \"%s\", \"readingType\": \"%s\", \"timestamp\": %s }"
 
     def getReadingType = readingType
 
@@ -103,8 +103,7 @@ class Listener(jedis: Jedis) extends ProtobufControllerClientListener {
             println(e.getMessage)
           }
           case e: Exception => {
-            println(e.getMessage)
-            sys.exit(1)
+            sys.error(e.getMessage)
           }
         }
       }
@@ -121,8 +120,11 @@ class Listener(jedis: Jedis) extends ProtobufControllerClientListener {
     }
   }
 
-  def receiveStatus(@WebParam(name = "status", targetNamespace = "") requestStatuses: List[RequestStatus]) {
-    // TODO
+  def receiveStatus(@WebParam(name = "status", targetNamespace = "") requestStatus: List[RequestStatus]) {
+    for (status <- requestStatus) {
+      println("[Status]:" + status)
+      requestStatusQueue.add(status)
+    }
   }
 
   def getMessageQueue: Queue[Message] = {

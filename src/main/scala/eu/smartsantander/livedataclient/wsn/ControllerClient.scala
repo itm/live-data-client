@@ -41,7 +41,7 @@ class ControllerClient(listener: Listener, configuration: HashMap[String, String
 
   var wsn: WSNAsyncWrapper = null
 
-  private var secretReservationKeys: List[SecretReservationKey] =
+  private val secretReservationKeys: List[SecretReservationKey] =
     BeanShellHelper.parseSecretReservationKeys(configuration("secretReservationKeys"))
 
   def setupProtobufClient() {
@@ -52,12 +52,10 @@ class ControllerClient(listener: Listener, configuration: HashMap[String, String
     }
     catch {
       case e: UnknownReservationIdException_Exception => {
-        println("There was not reservation found with the given secret reservation key. Exiting.")
-        sys.exit(1)
+        sys.error("There was not reservation found with the given secret reservation key. Exiting.")
       }
       case e: ExperimentNotRunningException_Exception => {
-        println(e.getMessage)
-        sys.exit(1)
+        sys.error(e.getMessage)
       }
     }
     println("Got a WSN instance URL, endpoint is: %s".format(wsnEndpointURL))
@@ -84,7 +82,7 @@ class ControllerClient(listener: Listener, configuration: HashMap[String, String
     }
     catch {
       case e: ExceptionInInitializerError => {
-        println("Failed to initialize wsnEnpoint, maybe secretReservationKeys are invalid!")
+        sys.error("Failed to initialize wsnEnpoint, maybe secretReservationKeys are invalid!")
       }
     }
   }
