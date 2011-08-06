@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const HOST = '0.0.0.0';
-const PORT = 8080;
+var HOST = '0.0.0.0';
+var PORT = 8080;
 
-const socket = require('socket.io');
-const express = require('express');
+var socket = require('socket.io');
+var express = require('express');
 
 var app = express.createServer();
 app.use(express.static(__dirname ));
 app.listen(PORT, HOST);
-console.log("Express server listening on port %d", app.address().port)
+console.log("Express server listening on port %d", app.address().port);
 
-const io = socket.listen(app);
-const redis = require("redis");
-const db = redis.createClient();
+var io = socket.listen(app);
+var redis = require("redis");
+var db = redis.createClient();
 
 var socketClient = null;
 

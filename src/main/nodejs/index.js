@@ -15,35 +15,29 @@
  */
 $(document).ready(function() {
 
-    const server = io.connect("http://localhost:8080");
+    var server = io.connect("http://localhost:8080");
     server.on("connect", function() {
         console.log("connected");
     });
 
-    var sensorNodes = new Object();
+    var sensorNodes = {};
 
-    var charts = new Object();
-    var series = new Object();
+    var charts = {};
+    var series = {};
 
-    var seriesOptions = new Object();
-    seriesOptions["temp"] = { strokeStyle: 'rgba(255, 0, 0, 1)', fillStyle: 'rgba(255, 0, 0, 0.1)', lineWidth: 3 };
-    seriesOptions["hum"] = { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.1)', lineWidth: 3 };
-    seriesOptions["lum"] = { strokeStyle: 'rgba(0, 0, 255, 1)', fillStyle: 'rgba(0, 0, 255, 0.1)', lineWidth: 3 };
-    seriesOptions["irda"] = { strokeStyle: 'rgba(255, 255, 0, 1)', fillStyle: 'rgba(255, 255, 0, 0.1)', lineWidth: 3 };
+    var seriesOptions  = {};
+    seriesOptions.temp = { strokeStyle: 'rgba(255, 0, 0, 1)', fillStyle: 'rgba(255, 0, 0, 0.1)', lineWidth: 3 };
+    seriesOptions.hum  = { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.1)', lineWidth: 3 };
+    seriesOptions.lum  = { strokeStyle: 'rgba(0, 0, 255, 1)', fillStyle: 'rgba(0, 0, 255, 0.1)', lineWidth: 3 };
+    seriesOptions.irda = { strokeStyle: 'rgba(255, 255, 0, 1)', fillStyle: 'rgba(255, 255, 0, 0.1)', lineWidth: 3 };
 
-    const delay = 1000; // 1 second
-
-    var lastReading = new Object();
-
-    var lastUpdated = new Object();
-
+    var delay = 1000; // 1 second
+    var lastReading = {};
+    var lastUpdated = {};
     var createCanvas = function(id) {
-        var hexId = "0x" + Number(id).toString(16);
-        return "<div>"
-                + "<span>Sensor Node [" + hexId + "/" + id + "]</span><br/>"
-                + "<canvas id=\"" + id + "\" width=\"800\" height=\"100\"></canvas>"
-                + "</div>";
-    };
+            var hexId = "0x" + Number(id).toString(16);
+            return "<div>" + "<span>Sensor Node [" + hexId + "/" + id + "]</span><br/>" + "<canvas id=\"" + id + "\" width=\"800\" height=\"100\"></canvas>" + "</div>";
+        };
 
     var createChart = function (senderId, seriesId) {
         $("#out").append(createCanvas(senderId));
@@ -93,14 +87,14 @@ $(document).ready(function() {
     // On message received from NodeJS server
     server.on('message', function (msg) {
         // Parse incoming message
-        const message = JSON.parse(msg);
+        var message = JSON.parse(msg);
 
         lastUpdated = new Date();
         console.log("Timestamp: " + message.timestamp);
         lastUpdated.setTime(message.timestamp);
 
         // Collect sensor node meta data
-        const senderId = message.sender;
+        var senderId = message.sender;
         if (!sensorNodes[senderId]) {
             sensorNodes[senderId] = [];
         }
@@ -111,14 +105,14 @@ $(document).ready(function() {
         }
 
         // Create a data series for each type of data
-        const seriesId = message.sender + "#" + message.readingType;
+        var seriesId = message.sender + "#" + message.readingType;
         if (!series[seriesId]) {
             createDataSeries(senderId, seriesId, message.readingType);
         }
 
         // Update data
-        const parsedReading = parseFloat(message["reading"]);
-        if (charts[senderId] && series[seriesId] && parsedReading != NaN) {
+        var parsedReading = parseFloat(message.reading);
+        if (charts[senderId] && series[seriesId] && !isNaN(parsedReading)) {
             console.log("Received data: " + parsedReading);
             lastReading[seriesId] = parsedReading;
             $("#lastUpdated").text("Last updated: " + lastUpdated);
