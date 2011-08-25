@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var HOST = '0.0.0.0';
-var PORT = 8080;
+var host = '0.0.0.0';
+var port = 8080;
 
 var socket = require('socket.io');
 var express = require('express');
 
 var app = express.createServer();
 app.use(express.static(__dirname ));
-app.listen(PORT, HOST);
+app.listen(port, host);
 console.log("Express server listening on port %d", app.address().port);
 
 var io = socket.listen(app);
